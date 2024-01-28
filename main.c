@@ -41,6 +41,49 @@ typedef struct
   int x;
   int y;
 } Move;
+int modInverse(int a, int m)
+{
+  a = a % m;
+  for (int x = 1; x < m; x++)
+    if ((a * x) % m == 1)
+      return x;
+  return 1;
+}
+
+char *enc(char input[])
+{
+  int a=23;
+  int k=7;
+  int prime=101;
+  int len = strlen(input);
+  for (int i = 0; i < len; i++)
+  {
+    if (input[i] != ' ')
+    {
+      input[i] = ((a * (input[i] - ' ')) + k) % prime;
+      input[i] += ' ';
+    }
+  }
+  return input;
+}
+
+char *dec(char input[])
+{
+  int a=23;
+  int k=7;
+  int prime=101;
+  int a_inv = modInverse(a, prime);
+  int len = strlen(input);
+  for (int i = 0; i < len; i++)
+  {
+    if (input[i] != ' ')
+    {
+      input[i] = (a_inv * (input[i] - ' ' - k + prime)) % prime;
+      input[i] += ' ';
+    }
+  }
+  return input;
+}
 
 void displayRemainingTime(Player *player, int remainingTime)
 {
@@ -51,7 +94,44 @@ char complement(char x)
 {
   return (x == 'X') ? 'O' : 'X';
 }
+char *board_to_str(char board[BOARD_SIZE + 2][BOARD_SIZE + 2])
+{
+  char *res = malloc((BOARD_SIZE + 2) * (BOARD_SIZE + 2) + 1); // Adjust the size as needed
+  if (res == NULL)
+  {
+    perror("Memory allocation failed");
+    exit(EXIT_FAILURE);
+  }
 
+  strcpy(res, "");
+  for (int i = 0; i < BOARD_SIZE + 2; i++)
+  {
+    strncat(res, board[i], BOARD_SIZE + 2);
+  }
+  return res;
+}
+
+char **str_to_board(const char *str)
+{
+  char **board = malloc((BOARD_SIZE + 2) * sizeof(char *));
+  if (board == NULL)
+  {
+    perror("Memory allocation failed");
+    exit(EXIT_FAILURE);
+  }
+
+  for (int i = 0; i < BOARD_SIZE + 2; i++)
+  {
+    board[i] = malloc((BOARD_SIZE + 2) * sizeof(char));
+    if (board[i] == NULL)
+    {
+      perror("Memory allocation failed");
+      exit(EXIT_FAILURE);
+    }
+    strncpy(board[i], str + i * (BOARD_SIZE + 2), BOARD_SIZE + 2);
+  }
+  return board;
+}
 void init_Player(Player *player)
 {
   player->score = 0;
@@ -205,7 +285,7 @@ void make_move(OthelloGame *game, Move move, Player *player1, Player *player2)
     game->previous_state = (OthelloGame *)malloc(sizeof(OthelloGame));
     copy(&tmp, game->previous_state);
     player2->previous_score = player2->score; // Store the previous score
-    player1->previous_score=player1->score;
+    player1->previous_score = player1->score;
     player2->score += flips + 1;
   }
 }
@@ -244,9 +324,9 @@ void undo_move(OthelloGame *game, Player *player1, Player *player2)
     }
   }
 
-  player1->score=player1->previous_score;
-  player2->score=player2->previous_score;
-  currentPlayer->used_prev=1;
+  player1->score = player1->previous_score;
+  player2->score = player2->previous_score;
+  currentPlayer->used_prev = 1;
   free(tmp); // Free the memory allocated for the previous state
 }
 
@@ -303,14 +383,14 @@ bool can_move(OthelloGame *game, char piece)
   return false;
 }
 
-bool whowon(OthelloGame *game)
+bool is_gameover(OthelloGame *game)
 {
   if (can_move(game, 'X') || can_move(game, 'O'))
     return false;
   return true;
 }
 
-void rungame(Player *player1, Player *player2, OthelloGame *game, int gameMode)
+char rungame(Player *player1, Player *player2, OthelloGame *game, int gameMode)
 {
   while (true)
   {
@@ -355,6 +435,10 @@ void rungame(Player *player1, Player *player2, OthelloGame *game, int gameMode)
              game->current_player == 'X' ? player1->time : player2->time);
       goto pp;
     }
+    else if (move.x == -3 && move.y == -3)
+    {
+      return '-';
+    }
     else
     {
       make_move(game, move, player1, player2);
@@ -363,10 +447,85 @@ void rungame(Player *player1, Player *player2, OthelloGame *game, int gameMode)
 
     if (is_gameover(game))
     {
+      if (!can_move(game, 'O'))
+        return 'X';
+      else if (!can_move(game, 'X'))
+        return 'O';
       printf("Final Scores:\n%s: %d\n%s: %d\n", player1->name, player1->score, player2->name, player2->score);
       break;
     }
   }
+  return '-';
+}
+
+void init_game_from_json(OthelloGame *game, Player *player1, Player *player2, cJSON *selected_game)
+{
+  strcpy(player1->name, dec(cJSON_GetStringValue(cJSON_GetObjectItem(selected_game, "player1"))));
+  player1->score = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player1score"));
+  player1->time = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player1time"));
+  player1->used_prev = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player1usedprev"));
+  player1->previous_score = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player1previousscore"));
+  strcpy(player2->name, dec(cJSON_GetStringValue(cJSON_GetObjectItem(selected_game, "player2"))));
+  player2->score = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player2score"));
+  player2->time = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player2time"));
+  player2->used_prev = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player2usedprev"));
+  player2->previous_score = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "player2previousscore"));
+
+  const cJSON *board_array = cJSON_GetObjectItem(selected_game, "board");
+  char **loaded_board = str_to_board(cJSON_GetStringValue(board_array));
+  init_game(game);
+  for (int i = 0; i < BOARD_SIZE + 2; i++)
+  {
+    strncpy(game->board[i], loaded_board[i], BOARD_SIZE + 2);
+  }
+
+  const cJSON *current_player_json = cJSON_GetObjectItem(selected_game, "curr");
+  game->current_player = current_player_json->valuestring[0];
+  const cJSON *previous_board_array = cJSON_GetObjectItem(selected_game, "previous_board");
+  char **loaded_previous_board = str_to_board(cJSON_GetStringValue(previous_board_array));
+  OthelloGame *tmp = malloc(sizeof(OthelloGame));
+
+  for (int i = 0; i < BOARD_SIZE + 2; i++)
+  {
+    strncpy(tmp->board[i], loaded_previous_board[i], BOARD_SIZE + 2);
+  }
+  tmp->previous_state = NULL;
+  tmp->current_player = game->current_player;
+  game->previous_state = tmp;
+}
+
+void add_game_to_json(OthelloGame *game, Player *player1, Player *player2, char winner, cJSON *games_array)
+{
+  cJSON *new_game = cJSON_CreateObject();
+  char* sss=(cJSON_CreateString(enc(player1->name)));
+  printf(sss);
+  cJSON_AddItemToObject(new_game, "player1", sss);
+  char*ss=(cJSON_CreateString(enc(player2->name)));
+  printf(ss);
+  cJSON_AddItemToObject(new_game, "player2", ss);
+  cJSON_AddItemToObject(new_game, "player1score", cJSON_CreateNumber(player1->score));
+  cJSON_AddItemToObject(new_game, "player1time", cJSON_CreateNumber(player1->time));
+  cJSON_AddItemToObject(new_game, "player1usedprev", cJSON_CreateBool(player1->used_prev));
+  cJSON_AddItemToObject(new_game, "player1previousscore", cJSON_CreateNumber(player1->previous_score));
+  cJSON_AddItemToObject(new_game, "player2score", cJSON_CreateNumber(player2->score));
+  cJSON_AddItemToObject(new_game, "player2time", cJSON_CreateNumber(player2->time));
+  cJSON_AddItemToObject(new_game, "player2usedprev", cJSON_CreateBool(player2->used_prev));
+  cJSON_AddItemToObject(new_game, "board", cJSON_CreateString(board_to_str(game->board)));
+
+  // Create a temporary game to get previous_board
+  OthelloGame tmp;
+  copy(game->previous_state, &tmp);
+  cJSON_AddItemToObject(new_game, "previous_board", cJSON_CreateString(board_to_str(tmp.board)));
+
+  cJSON_AddItemToObject(new_game, "player2previousscore", cJSON_CreateNumber(player2->previous_score));
+
+  // Convert char to string before adding to JSON
+  char curr[2] = {game->current_player, '\0'};
+  cJSON_AddItemToObject(new_game, "curr", cJSON_CreateString(curr));
+
+  cJSON_AddItemToObject(new_game, "winner", cJSON_CreateString(&winner));
+
+  cJSON_AddItemToArray(games_array, new_game);
 }
 
 int main()
@@ -380,33 +539,88 @@ int main()
   printf("Enter the name of player 2:\n");
   scanf("%s", player2.name);
 
+  FILE *fptr = fopen("data.json", "r");
+
+  fseek(fptr, 0, SEEK_END);
+
+  long file_size = ftell(fptr);
+  rewind(fptr);
+
+  char *json_data = malloc(file_size + 1);
+
+  fread(json_data, 1, file_size, fptr);
+  // fclose(fptr);
+
+  json_data[file_size] = '\0';
+
+  cJSON *json = cJSON_Parse(json_data);
+  cJSON *games_array = cJSON_GetObjectItem(json, "games");
+
   printf("Select the game mode:\n");
   printf("1. Timed\n");
   printf("2. Untimed\n");
-  printf("3. See the history\n");
-
+  printf("3. Select from the history\n");
   int gameMode;
   scanf("%d", &gameMode);
 
-  if (gameMode!=3){
+  if (gameMode != 3)
+  {
     if (gameMode != 1 && gameMode != 2)
-  {
-    printf("Invalid option. Exiting.\n");
-    return 1;
-  }
+    {
+      printf("Invalid option. Exiting.\n");
+      return 1;
+    }
 
-  if (gameMode == 1)
-  {
-    player1.time = 600; // Set the initial time for player 1 (in seconds)
-    player2.time = 600; // Set the initial time for player 2 (in seconds)
-  }
-  
-  OthelloGame game;
-  init_game(&game);
+    if (gameMode == 1)
+    {
+      player1.time = 600; // Set the initial time for player 1 (in seconds)
+      player2.time = 600; // Set the initial time for player 2 (in seconds)
+    }
 
-  rungame(&player1, &player2, &game, gameMode);
-  } else{
-    return 0;
+    OthelloGame *game = malloc(sizeof(OthelloGame));
+    init_game(game);
+    char winner = rungame(&player1, &player2, game, gameMode);
+    add_game_to_json(game, &player1, &player2, winner, games_array);
+
   }
+  else
+  { 
+
+    int games_array_size = cJSON_GetArraySize(games_array);
+    printf("%d", games_array_size);
+    for (int i = 0; i < games_array_size; i++)
+    {
+      cJSON *specific_game = cJSON_GetArrayItem(games_array, i);
+      char *player1name = dec(cJSON_GetStringValue(cJSON_GetObjectItem(specific_game, "player1")));
+      char *player2name = dec(cJSON_GetStringValue(cJSON_GetObjectItem(specific_game, "player2")));
+      if (!strcmp(player1name, player1.name) && !strcmp(player2name, player2.name))
+      {
+        char *string = cJSON_Print(specific_game);
+        printf("id: %d\n", i);
+        printf(string);
+        printf("\n");
+      }
+      else
+      {
+        continue;
+      }
+    }
+    int Selection = 0;
+    printf("select the id of the game you want to continue:\n");
+    scanf("%d", &Selection);
+    cJSON *selected_game = cJSON_GetArrayItem(games_array, Selection);
+    OthelloGame *game = malloc(sizeof(OthelloGame));
+    init_game_from_json(game, &player1, &player2, selected_game);
+    int gamemode = cJSON_GetNumberValue(cJSON_GetObjectItem(selected_game, "gamemode"));
+    cJSON_DeleteItemFromArray(games_array, Selection);
+    printf("%d", gamemode);
+    char winner = rungame(&player1, &player2, game, gamemode);
+    add_game_to_json(game, &player1, &player2, winner, games_array);
+    
+  }
+  fptr = fopen("data.json", "w");
+  char *ppr = cJSON_Print(json);
+  fprintf(fptr, "%s", ppr);
+  fclose(fptr);
   return 0;
 }

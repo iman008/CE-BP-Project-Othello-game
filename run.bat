@@ -1,3 +1,4 @@
 cd build/
+cmake --build . --target clean
 cmake --build  .
-Debug\test.exe 
+Debug\main.exe 

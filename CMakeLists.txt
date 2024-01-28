@@ -12,15 +12,16 @@ set(CMAKE_TOOLCHAIN_FILE "C:/Users/ASUS/Downloads/vcpkg/scripts/buildsystems/vcp
 set(CMAKE_GENERATOR_TOOLSET "host=x64" CACHE STRING "host toolset" FORCE)
 
 # Add the executable
-add_executable(test test.c)
+add_executable(main main.c)
 
 # Add include directories for cJSON
-target_include_directories(test PRIVATE "C:/Users/ASUS/Downloads/vcpkg/installed/x64-windows/include")
+target_include_directories(main PRIVATE "C:/Users/ASUS/Downloads/vcpkg/installed/x64-windows/include")
+target_compile_options(main PRIVATE -w)
 
 # Add library directories for cJSON
-target_link_directories(test PRIVATE "C:/Users/ASUS/Downloads/vcpkg/installed/x64-windows/lib")
+target_link_directories(main PRIVATE "C:/Users/ASUS/Downloads/vcpkg/installed/x64-windows/lib")
 
 # Link against cJSON library
-target_link_libraries(test PRIVATE cJSON)
+target_link_libraries(main PRIVATE cJSON)
 
 

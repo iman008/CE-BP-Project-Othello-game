@@ -1,15 +1,18 @@
 {
-  "games": [
-    {
-      "player1": "iman",
-	  "player1time":400,
-	  "player1score":40,
-      "player2": "amin",
-	  "player2time":540,
-	  "player2score":50,
-      "board": "                                            XO        OXX                                           ",
-	  "curr":"X",
-	  "winner":"-"
-	}
-  ]
+	"games":	[{
+			"player1":	"f]xt",
+			"player2":	"x]ft",
+			"player1score":	4,
+			"player1time":	0,
+			"player1usedprev":	false,
+			"player1previousscore":	2,
+			"player2score":	2,
+			"player2time":	0,
+			"player2usedprev":	false,
+			"board":	"                                   XO       XXX       OX                                            ",
+			"previous_board":	"                                   XO       XO        OX                                            ",
+			"player2previousscore":	2,
+			"curr":	"O",
+			"winner":	"-"
+		}]
 }
