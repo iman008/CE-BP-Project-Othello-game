@@ -1,0 +1,15 @@
+{
+  "games": [
+    {
+      "player1": "iman",
+	  "player1time":400,
+	  "player1score":40,
+      "player2": "amin",
+	  "player2time":540,
+	  "player2score":50,
+      "board": "                                            XO        OXX                                           ",
+	  "curr":"X",
+	  "winner":"-"
+	}
+  ]
+}

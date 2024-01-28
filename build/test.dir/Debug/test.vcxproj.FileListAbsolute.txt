@@ -1,0 +1,2 @@
+C:\Users\ASUS\iman\elmos\third semester\BP\build\Debug\cjson.dll
+C:\Users\ASUS\iman\elmos\third semester\BP\build\test.dir\Debug\test.vcxproj.CopyComplete

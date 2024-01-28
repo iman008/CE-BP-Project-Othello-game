@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "cvector.h": "c",
+        "string.h": "c",
+        "time.h": "c",
+        "windows.h": "c",
+        "cjson.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "math.h": "c"
+    }
+}
