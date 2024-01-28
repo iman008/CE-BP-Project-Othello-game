@@ -31,9 +31,10 @@ typedef struct
 {
   char name[100];
   int score;
-  int previous_score; // New field to store the previous score
+  int previous_score;
   bool used_prev;
-  int time; // New attribute for player's remaining time (in seconds)
+  int time; 
+  
 } Player;
 
 typedef struct
@@ -96,7 +97,7 @@ char complement(char x)
 }
 char *board_to_str(char board[BOARD_SIZE + 2][BOARD_SIZE + 2])
 {
-  char *res = malloc((BOARD_SIZE + 2) * (BOARD_SIZE + 2) + 1); // Adjust the size as needed
+  char *res = malloc((BOARD_SIZE + 2) * (BOARD_SIZE + 2) + 1); 
   if (res == NULL)
   {
     perror("Memory allocation failed");
@@ -137,7 +138,7 @@ void init_Player(Player *player)
   player->score = 0;
   player->previous_score = 0;
   player->used_prev = 0;
-  player->time = 0; // Initialize the time attribute
+  player->time = 0; 
 }
 
 void init_game(OthelloGame *game)
@@ -176,7 +177,7 @@ bool is_valid(OthelloGame *game, Move move)
 {
   if (game->board[move.x][move.y] != ' ')
   {
-    return false; // The position is not empty
+    return false;
   }
 
   char player = game->current_player;
@@ -202,12 +203,12 @@ bool is_valid(OthelloGame *game, Move move)
 
       if (found_opponent && game->board[x][y] == player)
       {
-        return true; // At least one opponent piece is flanked by player's pieces
+        return true; 
       }
     }
   }
 
-  return false; // No valid move found
+  return false; 
 }
 
 void make_move(OthelloGame *game, Move move, Player *player1, Player *player2)
@@ -275,7 +276,7 @@ void make_move(OthelloGame *game, Move move, Player *player1, Player *player2)
     game->current_player = 'X';
     game->previous_state = (OthelloGame *)malloc(sizeof(OthelloGame));
     copy(&tmp, game->previous_state);
-    player1->previous_score = player1->score; // Store the previous score
+    player1->previous_score = player1->score; 
     player2->previous_score = player2->score;
     player1->score += flips + 1;
   }
@@ -284,7 +285,7 @@ void make_move(OthelloGame *game, Move move, Player *player1, Player *player2)
     game->current_player = 'O';
     game->previous_state = (OthelloGame *)malloc(sizeof(OthelloGame));
     copy(&tmp, game->previous_state);
-    player2->previous_score = player2->score; // Store the previous score
+    player2->previous_score = player2->score; 
     player1->previous_score = player1->score;
     player2->score += flips + 1;
   }
@@ -310,14 +311,14 @@ void undo_move(OthelloGame *game, Player *player1, Player *player2)
   OthelloGame *tmp = game->previous_state;
   game->previous_state = NULL;
 
-  int flips = 0; // Keep track of the flips to revert the scores
+  int flips = 0; 
   for (int i = 0; i < BOARD_SIZE + 2; i++)
   {
     for (int j = 0; j < BOARD_SIZE + 2; j++)
     {
       if (game->board[i][j] != tmp->board[i][j])
       {
-        // A change in the board, indicating a flip
+       
         flips++;
       }
       game->board[i][j] = tmp->board[i][j];
@@ -327,7 +328,7 @@ void undo_move(OthelloGame *game, Player *player1, Player *player2)
   player1->score = player1->previous_score;
   player2->score = player2->previous_score;
   currentPlayer->used_prev = 1;
-  free(tmp); // Free the memory allocated for the previous state
+  free(tmp); 
 }
 
 void printgame(const OthelloGame *const game)
@@ -512,14 +513,12 @@ void add_game_to_json(OthelloGame *game, Player *player1, Player *player2, char 
   cJSON_AddItemToObject(new_game, "player2usedprev", cJSON_CreateBool(player2->used_prev));
   cJSON_AddItemToObject(new_game, "board", cJSON_CreateString(board_to_str(game->board)));
 
-  // Create a temporary game to get previous_board
   OthelloGame tmp;
   copy(game->previous_state, &tmp);
   cJSON_AddItemToObject(new_game, "previous_board", cJSON_CreateString(board_to_str(tmp.board)));
 
   cJSON_AddItemToObject(new_game, "player2previousscore", cJSON_CreateNumber(player2->previous_score));
 
-  // Convert char to string before adding to JSON
   char curr[2] = {game->current_player, '\0'};
   cJSON_AddItemToObject(new_game, "curr", cJSON_CreateString(curr));
 
@@ -573,8 +572,8 @@ int main()
 
     if (gameMode == 1)
     {
-      player1.time = 600; // Set the initial time for player 1 (in seconds)
-      player2.time = 600; // Set the initial time for player 2 (in seconds)
+      player1.time = 600; 
+      player2.time = 600; 
     }
 
     OthelloGame *game = malloc(sizeof(OthelloGame));
